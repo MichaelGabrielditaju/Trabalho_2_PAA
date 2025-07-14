@@ -183,12 +183,12 @@ int main() {
     // --- Definição do Problema ---
     // Você pode alterar estes arrays e a variável 'troco' para testar outros casos.
     int valores[] = {1, 5, 10, 25, 50, 100}; // Valores de moedas em centavos (ex: R$ 1,00 = 100)
-    int pesos[] =   {1, 3, 2,  5,  7,  4};   // Pesos hipotéticos para cada moeda
+    int pesos[] =   {1, 3, 2,  4,  5,  7};   // Pesos hipotéticos para cada moeda
     
     // Calcula automaticamente o número de tipos de moedas.
     int n = sizeof(valores) / sizeof(valores[0]);
 
-    int troco = 45; // O valor do troco que queremos encontrar.
+    int troco = 127; // O valor do troco que queremos encontrar.
 
     // --- Execução e Exibição ---
     printf("Calculando troco otimo (peso minimo) para o valor: %d\n", troco);
