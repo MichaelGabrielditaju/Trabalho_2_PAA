@@ -1,12 +1,7 @@
-#include <stdio.h>   // Inclui a biblioteca padrão de entrada e saída. Contém funções como printf (imprimir no console),
-                     // fprintf (imprimir em arquivo), fopen (abrir arquivo), fclose (fechar arquivo),
-                     // e perror (imprimir mensagens de erro do sistema).
-#include <stdlib.h>  // Inclui a biblioteca padrão. Contém funções para alocação de memória dinâmica
-                     // como malloc (aloca bloco de memória), calloc (aloca e inicializa com zero) e free (libera memória),
-                     // além de funções utilitárias como exit.
-#include <stdbool.h> // Inclui a biblioteca para usar o tipo de dado 'bool' (booleano), que pode ter valores 'true' ou 'false'.
-#include <string.h>  // Inclui a biblioteca de manipulação de strings. Usada aqui para snprintf,
-                     // que é uma versão mais segura de sprintf para formatar strings em buffers.
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h> 
+#include <string.h>
 
 // Define o tamanho do tabuleiro do QR Code. O tabuleiro será sempre de 12x12 células.
 #define TAMANHO_TABULEIRO 12
@@ -86,7 +81,7 @@ void salvar_qr_em_txt(int** tabuleiro, int indice) {
         fprintf(arquivo, "\n"); // Adiciona uma nova linha no arquivo após cada linha do tabuleiro.
     }
 
-    fclose(arquivo); // Fecha o arquivo, liberando os recursos associados a ele. Importante para salvar as mudanças.
+    fclose(arquivo); // Fecha o arquivo, liberando os recursos associados a ele.
     printf("QR salvo em: %s\n", nome_arquivo); // Informa ao usuário onde o arquivo foi salvo.
 }
 
@@ -136,7 +131,6 @@ bool eh_valido_parcial(int linha, int coluna) {
     // Similar à poda de linha, mas para a coluna. Se a contagem atual de células cheias na 'coluna'
     // mais o número máximo de células que ainda podem ser preenchidas nessa coluna (das linhas abaixo da 'linha' atual)
     // for menor que 5, este caminho também é inviável.
-    // Esta poda é mais eficaz quando a 'linha' está se aproximando do final do tabuleiro.
     if (contagem_colunas[coluna] + (TAMANHO_TABULEIRO - 1 - linha) < 5) return false;
     
     // Se nenhuma das condições de poda acima foi atendida, o tabuleiro parcial ainda é potencialmente válido.
@@ -145,7 +139,7 @@ bool eh_valido_parcial(int linha, int coluna) {
 
 /**
  * @brief Valida se um tabuleiro completo (12x12 células totalmente preenchidas)
- * atende a todos os critérios específicos de um QR Code hipotético válido.
+ * atende a todos os critérios específicos do QR Code hipotético válido.
  * Esta função é chamada apenas quando o backtracking atinge o final do tabuleiro.
  *
  * @param tabuleiro O tabuleiro 2D completo a ser validado.
@@ -175,8 +169,11 @@ bool eh_valido_completo(int** tabuleiro) {
     }
 
     // --- Requisitos 3 e 4: Pelo menos duas sub-regiões de Tipo 1 e Tipo 2 devem existir. ---
-    // Tipo 1: [CHEIA|VAZIA] / [CHEIA|CHEIA]
-    // Tipo 2: [CHEIA|CHEIA] / [VAZIA|CHEIA]
+    // Tipo 1: [CHEIA|VAZIA] ou [# . ]
+    //         [CHEIA|CHEIA]    [# # ]
+    // Tipo 2 é a inversão do Tipo 1, na coordenada transposta.
+    // Tipo 2: [CHEIA|CHEIA] ou [# # ]
+    //         [VAZIA|CHEIA]    [. # ]
     // 'Coordenada' é uma struct local para armazenar a linha e coluna de uma região encontrada.
     typedef struct { int l, c; } Coordenada;
     // Arrays para armazenar as coordenadas de todas as regiões de Tipo 1 e Tipo 2 encontradas.
