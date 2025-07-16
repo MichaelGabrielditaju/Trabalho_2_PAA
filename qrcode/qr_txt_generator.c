@@ -1,13 +1,18 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h> 
-#include <string.h>
+#include <stdio.h>   // Inclui a biblioteca padrão de entrada e saída. Contém funções como printf (imprimir no console),
+                     // fprintf (imprimir em arquivo), fopen (abrir arquivo), fclose (fechar arquivo),
+                     // e perror (imprimir mensagens de erro do sistema).
+#include <stdlib.h>  // Inclui a biblioteca padrão. Contém funções para alocação de memória dinâmica
+                     // como malloc (aloca bloco de memória), calloc (aloca e inicializa com zero) e free (libera memória),
+                     // além de funções utilitárias como exit.
+#include <stdbool.h> // Inclui a biblioteca para usar o tipo de dado 'bool' (booleano), que pode ter valores 'true' ou 'false'.
+#include <string.h>  // Inclui a biblioteca de manipulação de strings. Usada aqui para snprintf,
+                     // que é uma versão mais segura de sprintf para formatar strings em buffers.
 
 // Define o tamanho do tabuleiro do QR Code. O tabuleiro será sempre de 12x12 células.
 #define TAMANHO_TABULEIRO 12
 // Define o número máximo de soluções (códigos QR hipotéticos válidos) que o programa deve encontrar e armazenar.
 // O programa vai parar de procurar novas soluções depois de encontrar este número.
-#define MAX_SOLUCOES 10
+#define MAX_SOLUCOES 1
 
 // Variáveis globais para gerenciar o estado da busca e as soluções encontradas.
 // 'solucoes' é um ponteiro para um array de ponteiros para ponteiros de inteiros (int***).
@@ -82,7 +87,7 @@ void salvar_qr_em_txt(int** tabuleiro, int indice) {
     }
 
     fclose(arquivo); // Fecha o arquivo, liberando os recursos associados a ele.
-    printf("QR salvo em: %s\n", nome_arquivo); // Informa ao usuário onde o arquivo foi salvo.
+    printf("\nQR salvo em: %s\n", nome_arquivo); // Informa ao usuário onde o arquivo foi salvo.
 }
 
 /**
@@ -146,6 +151,8 @@ bool eh_valido_parcial(int linha, int coluna) {
  * @return true se o tabuleiro atende a todos os critérios, false caso contrário.
  */
 bool eh_valido_completo(int** tabuleiro) {
+    //printf("DEBUG -- Iniciando validacao completa para um tabuleiro preenchido --\n");
+
     // --- Requisito 1: Exatamente 3 cantos do tabuleiro devem ter blocos 2x2 totalmente cheios. ---
     int cantos_2x2_cheios = 0; // Contador para os cantos cheios.
     for (int k = 0; k < 4; k++) { // Itera sobre as 4 coordenadas de canto pré-definidas.
@@ -156,17 +163,25 @@ bool eh_valido_completo(int** tabuleiro) {
             cantos_2x2_cheios++; // Incrementa o contador se o canto estiver cheio.
         }
     }
+    //printf("DEBUG: Requisito 1 - Cantos 2x2 cheios encontrados: %d\n", cantos_2x2_cheios);
     // Se a contagem não for exatamente 3, o tabuleiro é inválido.
-    if (cantos_2x2_cheios != 3) return false;
+    if (cantos_2x2_cheios != 3) {
+    //    printf("DEBUG: Falha no Requisito 1: Esperado 3 cantos cheios, encontrado %d.\n", cantos_2x2_cheios);
+        return false;
+    }
 
     // --- Requisito 2: A quantidade de células cheias de uma linha ou coluna não pode ser menor do que 5. ---
     // Esta verificação é feita para todas as linhas e colunas no tabuleiro completo.
     for (int i = 0; i < TAMANHO_TABULEIRO; i++) {
         // Se alguma linha ou alguma coluna tiver menos de 5 células cheias, o tabuleiro é inválido.
         if (contagem_linhas[i] < 5 || contagem_colunas[i] < 5) {
+    //        printf("DEBUG: Falha no Requisito 2: Linha %d com %d cheias (Min 5). Coluna %d com %d cheias (Min 5).\n", 
+    //               i, contagem_linhas[i], i, contagem_colunas[i]);
             return false;
         }
     }
+    //printf("DEBUG: Requisito 2 - Todas as linhas e colunas atendem ao minimo de 5 celulas cheias.\n");
+
 
     // --- Requisitos 3 e 4: Pelo menos duas sub-regiões de Tipo 1 e Tipo 2 devem existir. ---
     // Tipo 1: [CHEIA|VAZIA] ou [# . ]
@@ -205,8 +220,12 @@ bool eh_valido_completo(int** tabuleiro) {
             }
         }
     }
+    //printf("DEBUG: Requisitos 3 e 4 - Encontradas %d regioes Tipo 1 e %d regioes Tipo 2.\n", num_regioes_tipo1, num_regioes_tipo2);
     // Se não foram encontradas pelo menos duas regiões de cada tipo, o tabuleiro é inválido.
-    if (num_regioes_tipo1 < 2 || num_regioes_tipo2 < 2) return false;
+    if (num_regioes_tipo1 < 2 || num_regioes_tipo2 < 2) {
+    //    printf("DEBUG: Falha nos Requisitos 3 ou 4: Esperava >= 2 de cada, mas obteve Tipo 1: %d, Tipo 2: %d.\n", num_regioes_tipo1, num_regioes_tipo2);
+        return false;
+    }
 
     // --- Requisito 5: As sub-regiões dos passos 3 e 4 não podem fazer parte do mesmo sub-tabuleiro 3x3. ---
     // Isso significa que, para cada tipo de região, as pelo menos duas ocorrências devem estar em blocos 3x3 diferentes.
@@ -234,8 +253,12 @@ bool eh_valido_completo(int** tabuleiro) {
             }
         }
     }
+    //printf("DEBUG: Requisito 5 (Tipo 1) - Sub-tabuleiros 3x3 distintos para Tipo 1: %d\n", count_sub_tabuleiros1);
     // Para ser válido, deve haver pelo menos duas regiões de Tipo 1 em sub-tabuleiros 3x3 *distintos*.
-    if (count_sub_tabuleiros1 < 2) return false;
+    if (count_sub_tabuleiros1 < 2) {
+      //  printf("DEBUG: Falha no Requisito 5 (Tipo 1): Esperava >= 2 sub-tabuleiros distintos, obteve %d.\n", count_sub_tabuleiros1);
+        return false;
+    }
 
     // Faz o mesmo processamento para as regiões de Tipo 2.
     int sub_tabuleiros_vistos2[TAMANHO_TABULEIRO * TAMANHO_TABULEIRO];
@@ -256,11 +279,14 @@ bool eh_valido_completo(int** tabuleiro) {
             }
         }
     }
+    //printf("DEBUG: Requisito 5 (Tipo 2) - Sub-tabuleiros 3x3 distintos para Tipo 2: %d\n", count_sub_tabuleiros2);
     // Para ser válido, deve haver pelo menos duas regiões de Tipo 2 em sub-tabuleiros 3x3 *distintos*.
-    if (count_sub_tabuleiros2 < 2) return false;
-
-    // Se todas as verificações acima passaram, o tabuleiro é considerado um QR Code hipotético válido.
-    return true;
+    if (count_sub_tabuleiros2 < 2) {
+    //    printf("DEBUG: Falha no Requisito 5 (Tipo 2): Esperava >= 2 sub-tabuleiros distintos, obteve %d.\n", count_sub_tabuleiros2);
+        return false;
+    }
+    //printf("DEBUG -- Validacao completa CONCLUIDA com SUCESSO! --\n");
+    return true; // Se todas as verificações acima passaram, o tabuleiro é considerado um QR Code hipotético válido.
 }
 
 // ----- BACKTRACKING -----
@@ -397,9 +423,9 @@ int main() {
         printf("Encontrado %d codigo(s) QR hipotetico(s) valido(s):\n", num_solucoes_encontradas);
         // Itera sobre cada solução encontrada.
         for (int i = 0; i < num_solucoes_encontradas; i++) {
-            printf("\nCodigo QR %d:\n", i + 1);
+            printf("\n--- Exibindo Codigo QR %d (VALIDO) ---\n", i + 1);
             imprimir_tabuleiro(solucoes[i]); // Imprime a solução no terminal.
-            salvar_qr_em_txt(solucoes[i], i); // Salva a solução em um arquivo de texto.
+            salvar_qr_em_txt(solucoes[i], i); // Salva a solução em arquivo.
 
             // Libera a memória de cada tabuleiro de solução individualmente.
             for (int r = 0; r < TAMANHO_TABULEIRO; r++) {
